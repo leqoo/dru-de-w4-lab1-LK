@@ -87,5 +87,13 @@ maxBy(_._2)._1
 ).toOption
 }
 
-  def task15(startDate: LocalDate, endDate: LocalDate): Option[Double] = None
+  def task15(startDate: LocalDate, endDate: LocalDate): Option[Double] = {
+def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
+val N = records.
+withFilter(x=>f(x.timestamp.toLocalDate)).size
+val m = records.
+withFilter(x=>f(x.timestamp.toLocalDate) && x.replyCode=="404").size
+Try(m/(N.toDouble)).toOption
+}
+
 }
