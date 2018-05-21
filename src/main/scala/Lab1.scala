@@ -138,10 +138,8 @@ class Lab1(val records: Vector[LogRecord]) {
     def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
     val N = records.filter(x=>f(x.timestamp.toLocalDate)).size
     val m = records.filter(x=>f(x.timestamp.toLocalDate) && x.replyCode=="404").size
-    N match {
-        case 0 => None
-        case n => Some(m/(N.toDouble))
-    }
+    val r = m/(N.toDouble)
+    if ((r.isNaN)||(r.isInfinity)) None else Some(r)
   }
 
 
