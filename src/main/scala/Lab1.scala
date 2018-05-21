@@ -69,10 +69,10 @@ class Lab1(val records: Vector[LogRecord]) {
   ).toOption
 
   def task9(n: Int): Vector[String] = 
-    records.collect{case x if x.userName.nonEmpty => (x.userName.get,x.host)}.
+    records.collect{case x if x.userName.nonEmpty => (x.userName,x.host)}.
     groupBy(_._1). 
     mapValues(_.size).
-    filter(_._2>=n).keys.toVector
+    filter(_._2>=n).keys.flatten.toVector
 
 
   def task10(date: LocalDate): Vector[String] = 
@@ -88,7 +88,7 @@ class Lab1(val records: Vector[LogRecord]) {
 
   def task11(startDate: LocalDate, endDate: LocalDate): Set[String] = {
       def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
-    val allreqs = recordv.map(_.request).distinct
+    val allreqs = records.map(_.request).distinct
     records.
     filter(x=>isIP(x.host)&&f(x.timestamp.toLocalDate)).
     groupBy(_.host). // host -> vec of logrecs
