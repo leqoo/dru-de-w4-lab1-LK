@@ -46,7 +46,7 @@ class Lab1(val records: Vector[LogRecord]) {
   records.exists(x=>(x.userName contains username)&&(x.timestamp.toLocalDate==date))
 
   def task7(startDate: LocalDate, endDate: LocalDate): Vector[String] = {
-      def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
+        def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
     records.
     withFilter(x=>f(x.timestamp.toLocalDate) ).
     map(_.request).
@@ -62,38 +62,87 @@ class Lab1(val records: Vector[LogRecord]) {
 
   def task8: Option[Int] = 
   Try(
-records.map(x=>(x.timestamp.toLocalDate,x.host,x.bytesInReply)).groupBy(x=>(x._1,x._2)).mapValues(_.flatMap(_._3).sum).values.max 
-).toOption
+    records.map(x=>(x.timestamp.toLocalDate,x.host,x.bytesInReply))
+    .groupBy(x=>(x._1,x._2))
+    .mapValues(_.flatMap(_._3).sum)
+    .values.max 
+  ).toOption
 
-  def task9(n: Int): Vector[String] = Vector()
+  def task9(n: Int): Vector[String] = 
+    records.collect{case x if x.userName.nonEmpty => (x.userName.get,x.host)}.
+    groupBy(_._1). 
+    mapValues(_.size).
+    filter(_._2>=n).keys.toVector
+
 
   def task10(date: LocalDate): Vector[String] = 
   records.filter(_.timestamp.toLocalDate==date).groupBy(_.host).mapValues(_.size).toSeq.sortWith(_._2 > _._2).take(5).map(_._1).toVector
 
-  def task11(startDate: LocalDate, endDate: LocalDate): Set[String] = Set()
+  def isIP(host: String):Boolean = {
+    val ipr = """^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$""".r
+    host match {
+        case ipr(a,b,c,d) => (a.toInt<=256)&&(c.toInt<=256)&&(b.toInt<=256)&&(d.toInt<=256)
+        case _ => false
+    }
+  }
 
-  def task12(request: String): Vector[String] = Vector()
+  def task11(startDate: LocalDate, endDate: LocalDate): Set[String] = {
+      def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
+    val allreqs = recordv.map(_.request).distinct
+    records.
+    filter(x=>isIP(x.host)&&f(x.timestamp.toLocalDate)).
+    groupBy(_.host). // host -> vec of logrecs
+    filter({
+        case (h,ls) => allreqs.foldLeft(true)(
+            (flag,req)=>flag&&(ls.map(_.request) contains req)
+        )
+    }).map(_._1).toSet
+  }
 
-  def task13(n: Int, startDate: LocalDate, endDate: LocalDate): Set[String] = Set()
+  def task12(request: String): Vector[String] = 
+  records.
+  filter(_.request == request).
+  map(_.host).
+  groupBy(x=>x). //host -> vector of host
+  mapValues(_.size).
+  toSeq.
+  sortWith(_._2 > _._2).
+  take(5).
+  map(_._1).
+  toVector
+
+  def task13(n: Int, startDate: LocalDate, endDate: LocalDate): Set[String] = {
+      def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
+    records.
+    filter(x=>isIP(x.host)&&f(x.timestamp.toLocalDate)).
+    groupBy(_.host).
+    filter({
+        case (h,ls)=> ls.groupBy(_.request).mapValues(_.size).exists(_._2>=n)
+    }).take(5).
+    map(_._1).
+    toSet
+  }
 
   def task14(startDate: LocalDate, endDate: LocalDate): Option[String] = {
     def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
-Try(
-records.
-filter(x=>f(x.timestamp.toLocalDate) && x.replyCode=="503").
-groupBy(_.request).
-mapValues(_.size).
-maxBy(_._2)._1
-).toOption
-}
+    Try(
+        records.
+        filter(x=>f(x.timestamp.toLocalDate) && x.replyCode=="503").
+        groupBy(_.request).
+        mapValues(_.size).
+        maxBy(_._2)._1
+    ).toOption
+  }
 
   def task15(startDate: LocalDate, endDate: LocalDate): Option[Double] = {
-def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
-val N = records.
-withFilter(x=>f(x.timestamp.toLocalDate)).size
-val m = records.
-withFilter(x=>f(x.timestamp.toLocalDate) && x.replyCode=="404").size
-Try(m/(N.toDouble)).toOption
-}
+    def f(x:LocalDate) = (x.isEqual(startDate)||x.isAfter(startDate))&&(x.isEqual(endDate)||x.isBefore(endDate))
+    val N = records.filter(x=>f(x.timestamp.toLocalDate)).size
+    val m = records.filter(x=>f(x.timestamp.toLocalDate) && x.replyCode=="404").size
+    N match {
+        case 0 => None
+        case n => Some(m/(N.toDouble))
+    }
+  }
+
 
 }
