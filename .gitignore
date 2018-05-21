@@ -1,0 +1,10 @@
+*.class
+*.log
+
+.DS_Store
+
+.idea
+target/
+logs/
+
+src/main/resources
